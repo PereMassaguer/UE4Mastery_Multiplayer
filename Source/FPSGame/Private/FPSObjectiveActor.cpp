@@ -4,6 +4,7 @@
 #include "FPSObjectiveActor.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "FPSCharacter.h"
 
 // Sets default values
 AFPSObjectiveActor::AFPSObjectiveActor()
@@ -40,11 +41,12 @@ void AFPSObjectiveActor::NotifyActorBeginOverlap(AActor* OtherActor)
  	Super::NotifyActorBeginOverlap(OtherActor);
 
 	PlayEffects();
-}
+	
+	AFPSCharacter* character = Cast<AFPSCharacter>(OtherActor);
+	if (character)
+	{
+		character->bIsCarryingObjective = true;
 
-// Called every frame
-void AFPSObjectiveActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+		Destroy();
+	}
 }
-

@@ -36,8 +36,4 @@ protected:
 
 public:	
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
-
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 };
