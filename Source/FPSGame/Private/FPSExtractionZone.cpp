@@ -41,6 +41,7 @@ void AFPSExtractionZone::OverlapHandle(UPrimitiveComponent* OverlappedComponent,
 		{
 			gameMode->CompleteMission(character, true);
 		}
+
 		UGameplayStatics::PlaySound2D(this, ObjectiveCompletedSound);
 	}
 	else

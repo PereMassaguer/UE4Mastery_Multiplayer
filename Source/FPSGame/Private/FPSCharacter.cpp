@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/PawnNoiseEmitterComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 AFPSCharacter::AFPSCharacter()
@@ -48,23 +49,23 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 }
 
+void AFPSCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!IsLocallyControlled())
+	{
+		FRotator NewRot = CameraComponent->GetRelativeRotation();
+		//Decompress Pitch
+		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
+
+		CameraComponent->SetRelativeRotation(NewRot);
+	}
+}
 
 void AFPSCharacter::Fire()
 {
-	// try and fire a projectile
-	if (ProjectileClass)
-	{
-		FVector MuzzleLocation = GunMeshComponent->GetSocketLocation("Muzzle");
-		FRotator MuzzleRotation = GunMeshComponent->GetSocketRotation("Muzzle");
-
-		//Set Spawn Collision Handling Override
-		FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-		ActorSpawnParams.Instigator = this;
-
-		// spawn the projectile at the muzzle
-		GetWorld()->SpawnActor<AFPSProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, ActorSpawnParams);
-	}
+	ServerFire();
 
 	// try and play the sound if specified
 	if (FireSound)
@@ -84,6 +85,28 @@ void AFPSCharacter::Fire()
 	}
 }
 
+void AFPSCharacter::ServerFire_Implementation()
+{
+	// try and fire a projectile
+	if (ProjectileClass)
+	{
+		FVector MuzzleLocation = GunMeshComponent->GetSocketLocation("Muzzle");
+		FRotator MuzzleRotation = GunMeshComponent->GetSocketRotation("Muzzle");
+
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+		ActorSpawnParams.Instigator = this;
+
+		// spawn the projectile at the muzzle
+		GetWorld()->SpawnActor<AFPSProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation, ActorSpawnParams);
+	}
+}
+
+bool AFPSCharacter::ServerFire_Validate()
+{
+	return true;
+}
 
 void AFPSCharacter::MoveForward(float Value)
 {
@@ -94,7 +117,6 @@ void AFPSCharacter::MoveForward(float Value)
 	}
 }
 
-
 void AFPSCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f)
@@ -102,4 +124,12 @@ void AFPSCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
+}
+
+void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSCharacter, bIsCarryingObjective);
+	//DOREPLIFETIME_CONDITION(AFPSCharacter, bIsCarryingObjective, COND_OwnerOnly);
 }
