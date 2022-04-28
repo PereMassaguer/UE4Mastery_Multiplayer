@@ -28,11 +28,7 @@ AFPSLaunchPad::AFPSLaunchPad()
 
 
 void AFPSLaunchPad::LaunchActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	//if (OtherActor == nullptr) return;
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("uwu"));
-	
+{	
 	FRotator LaunchDirection = GetActorRotation();
 	LaunchDirection.Pitch += LaunchPitchAngle;
 	FVector LaunchVelocity = LaunchDirection.Vector() * LaunchForce;
